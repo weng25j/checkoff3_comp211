@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#define WINDOW_SIZE 255
-#define MAX_MATCH   255
-#define MIN_MATCH   3
+#define INPUT_CAPACITY 1024
+#define WINDOW_SIZE    255
+#define MAX_MATCH      255
+#define MIN_MATCH      3
 
 typedef struct {
     int is_match;           // 0 = literal, 1 = back-reference
@@ -40,26 +41,64 @@ static void print_tokens(const Token tokens[], size_t count)
 
 int main(void)
 {
-    const char input[] = "ABCABCABCX";
-    const size_t input_length = strlen(input);
-    Token tokens[sizeof(input)];
+    char input[INPUT_CAPACITY];
+
+    printf("Enter text to compress (one line, up to %d characters):\n",
+           INPUT_CAPACITY - 1);
+
+    if (fgets(input, sizeof(input), stdin) == NULL) {
+        fprintf(stderr, "Could not read input.\n");
+        return 1;
+    }
+
+    /* Remove the newline if the user pressed Enter. */
+    size_t input_length = strcspn(input, "\n");
+
+    /*
+     * If there was no newline, check whether the line exceeded the buffer.
+     * A newline may be absent because input ended at EOF, which is okay.
+     */
+    if (input[input_length] == '\0' && !feof(stdin)) {
+        int next_char = getchar();
+
+        if (next_char != '\n' && next_char != EOF) {
+            fprintf(stderr, "Input is too long; please keep it under %d characters.\n",
+                    INPUT_CAPACITY);
+            return 1;
+        }
+    }
+
+    input[input_length] = '\0';
+
+    if (input_length == 0) {
+        printf("You entered an empty line; there is no data to compress.\n");
+        return 0;
+    }
+
+    /*
+     * At most one token is emitted per input character, so this is enough.
+     */
+    Token tokens[INPUT_CAPACITY];
     size_t token_count = 0;
     size_t pos = 0;
     size_t step = 1;
+
+    printf("\nOriginal data: ");
+    print_text(input, input_length);
+    putchar('\n');
 
     while (pos < input_length) {
         size_t best_length = 0;
         size_t best_distance = 0;
 
-        /* Search backward, but no farther than WINDOW_SIZE bytes. */
         size_t search_start =
             (pos > WINDOW_SIZE) ? pos - WINDOW_SIZE : 0;
 
+        /* Search earlier input positions for the longest match. */
         for (size_t candidate = search_start; candidate < pos; candidate++) {
             size_t distance = pos - candidate;
             size_t length = 0;
 
-            /* Extend this match for as long as the bytes keep matching. */
             while (length < MAX_MATCH &&
                    pos + length < input_length &&
                    input[pos + length] ==
@@ -121,5 +160,9 @@ int main(void)
     }
 
     printf("\nFinal token count: %zu\n", token_count);
+    printf("Final tokens: ");
+    print_tokens(tokens, token_count);
+    putchar('\n');
+
     return 0;
 }

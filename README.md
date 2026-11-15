@@ -11,6 +11,7 @@ Topics Explored:
 - interesting discoveries about LZ77
     - how LZ77 serves as the core for many modern data compression algorithms like DEFLATE
     - the idea of a minimum and maximum length of data to compress
+    - main takeaway: best for data with lots of repition and if you need lossless compression
 
 Presentation Materials: Presentation file - LZ77.pptx
 
@@ -19,4 +20,3 @@ Coding Examples: LZ77_example.c is a demo of the LZ77 compression algorithm in a
     - gcc -std=c11 -Wall -Wextra -o LZ77_example LZ77_example.c
     - Then run: ./LZ77_example
 
-Additional Materials:

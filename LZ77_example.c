@@ -2,35 +2,32 @@
 #include <string.h>
 
 #define INPUT_CAPACITY 1024
-#define WINDOW_SIZE    255
-#define MAX_MATCH      255
-#define MIN_MATCH      3
+#define WINDOW_SIZE 255
+#define MAX_MATCH 255
+#define MIN_MATCH 3
 
 typedef struct {
-    int is_match;           // 0 = literal, 1 = back-reference
+    int is_match;  // 0 = literal, 1 = back-reference
     unsigned char literal;
     size_t distance;
     size_t length;
 } Token;
 
-static void print_text(const char *text, size_t length)
-{
+static void print_text(const char* text, size_t length) {
     putchar('[');
     printf("%.*s", (int)length, text);
     putchar(']');
 }
 
-static void print_tokens(const Token tokens[], size_t count)
-{
+static void print_tokens(const Token tokens[], size_t count) {
     putchar('[');
 
     for (size_t i = 0; i < count; i++) {
-        if (i > 0)
-            printf(", ");
+        if (i > 0) printf(", ");
 
         if (tokens[i].is_match) {
-            printf("(distance %zu, length %zu)",
-                   tokens[i].distance, tokens[i].length);
+            printf("(distance %zu, length %zu)", tokens[i].distance,
+                   tokens[i].length);
         } else {
             printf("'%c'", tokens[i].literal);
         }
@@ -39,8 +36,7 @@ static void print_tokens(const Token tokens[], size_t count)
     putchar(']');
 }
 
-int main(void)
-{
+int main(void) {
     char input[INPUT_CAPACITY];
 
     printf("Enter text to compress (one line, up to %d characters):\n",
@@ -62,7 +58,8 @@ int main(void)
         int next_char = getchar();
 
         if (next_char != '\n' && next_char != EOF) {
-            fprintf(stderr, "Input is too long; please keep it under %d characters.\n",
+            fprintf(stderr,
+                    "Input is too long; please keep it under %d characters.\n",
                     INPUT_CAPACITY);
             return 1;
         }
@@ -91,18 +88,15 @@ int main(void)
         size_t best_length = 0;
         size_t best_distance = 0;
 
-        size_t search_start =
-            (pos > WINDOW_SIZE) ? pos - WINDOW_SIZE : 0;
+        size_t search_start = (pos > WINDOW_SIZE) ? pos - WINDOW_SIZE : 0;
 
         /* Search earlier input positions for the longest match. */
         for (size_t candidate = search_start; candidate < pos; candidate++) {
             size_t distance = pos - candidate;
             size_t length = 0;
 
-            while (length < MAX_MATCH &&
-                   pos + length < input_length &&
-                   input[pos + length] ==
-                       input[pos + length - distance]) {
+            while (length < MAX_MATCH && pos + length < input_length &&
+                   input[pos + length] == input[pos + length - distance]) {
                 length++;
             }
 
@@ -127,11 +121,9 @@ int main(void)
             print_text(input + pos, consumed);
             printf(" (match)");
 
-            tokens[token_count++] = (Token) {
-                .is_match = 1,
-                .distance = best_distance,
-                .length = best_length
-            };
+            tokens[token_count++] = (Token){.is_match = 1,
+                                            .distance = best_distance,
+                                            .length = best_length};
 
             printf("\nEmitted:        (distance %zu, length %zu)",
                    best_distance, best_length);
@@ -142,10 +134,8 @@ int main(void)
             print_text(input + pos, consumed);
             printf(" (literal)");
 
-            tokens[token_count++] = (Token) {
-                .is_match = 0,
-                .literal = (unsigned char)input[pos]
-            };
+            tokens[token_count++] =
+                (Token){.is_match = 0, .literal = (unsigned char)input[pos]};
 
             printf("\nEmitted:        '%c'", input[pos]);
         }
